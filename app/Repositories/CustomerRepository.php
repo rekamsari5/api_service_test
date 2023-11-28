@@ -12,7 +12,7 @@ class CustomerRepository
     public function getCustomer($filter)
     {
 
-        $query = DB::table('tbl_customer')
+        $query = DB::table('nasabah')
             ->select('*')
             ->where(function($sub_query) use ($filter) {
                 if (isset($filter['name'])) {
@@ -26,22 +26,27 @@ class CustomerRepository
     }
 
     public function createCustomer($request) {
-        $query = DB::table('tbl_customer')
+        $query = DB::table('nasabah')
                 ->insert([
                     'name' => $request['name'],
-                    'address' => $request['address']
-
+                    'email' => $request['email'],
+                    'alamat' => $request['alamat'],
+                    'no_tlp' => $request['no_tlp'],
+                    'nik' => $request['nik']
                 ]);
         return $query;
     }
 
     public function updateCustomer($request) {
         $update = new DateTime('now');
-        $query = DB::table('tbl_customer')
+        $query = DB::table('nasabah')
                 ->where('id', $request['id'])
                 ->update([
                     'name' => $request['name'],
-                    'address' => $request['address'],
+                    'email' => $request['email'],
+                    'alamat' => $request['alamat'],
+                    'no_tlp' => $request['no_tlp'],
+                    'nik' => $request['nik'],
                     'updated_at' => $update
                 ]);
 
@@ -49,7 +54,7 @@ class CustomerRepository
     }
 
     public function deleteCustomer($request) {
-        $query = DB::table('tbl_customer')
+        $query = DB::table('nasabah')
                  ->where("id", $request)
                  ->delete();
 

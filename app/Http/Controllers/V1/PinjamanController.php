@@ -10,22 +10,22 @@ use App\Http\Controllers\Controller;
 use App\Exceptions\ParameterException;
 use App\Exceptions\FailedDataException;
 use App\Exceptions\InvalidRuleException;
-use App\Repositories\CustomerRepository;
+use App\Repositories\PinjamanRepository;
 use App\Exceptions\DataNotFoundException;
 use Illuminate\Support\Facades\Validator;
 
-class CustomerController extends Controller
+class PinjamanController extends Controller
 {
-    public function __construct(CustomerRepository $customerRepository)
+    public function __construct(PinjamanRepository $pinjamanRepository)
     {
         header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
-        $this->customerRepository = $customerRepository;
+        $this->pinjamanRepository = $pinjamanRepository;
         $this->output = new stdClass();
         $this->output->responseCode = '';
         $this->output->responseDesc = '';
     }
 
-    public function inquirycustomer(Request $request)
+    public function inquirypinjaman(Request $request)
     {
         $filter = [];
 
@@ -43,7 +43,7 @@ class CustomerController extends Controller
         }
 
         $filter['name'] = $request->name;
-        $result= $this->customerRepository->getCustomer($filter);
+        $result= $this->pinjamanRepository->getPinjaman($filter);
 
         if(count($result) < 1){
             throw new DataNotFoundException('Data Not Found');
@@ -51,23 +51,22 @@ class CustomerController extends Controller
 
 
         $this->output->responseCode = '00';
-        $this->output->responseDesc = 'Success Inquiry Customer';
+        $this->output->responseDesc = 'Success Inquiry Pinjaman Customer';
         $this->output->responseData = $result;
         return response()->json($this->output);
     }
 
-    public function createcustomer(Request $request){
+    public function createpinjaman(Request $request){
 
         if (empty($request->all())) {
             throw new ParameterException('Parameter tidak boleh kosong');
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string',
-            'email' => 'required|string',
-            'alamat' => 'required|string',
-            'no_tlp' => 'required|string',
-            'nik' => 'required|digits:16|string'
+            'id_nasabah' => 'required|numeric',
+            'jumlah_pinjaman' => 'required|numeric',
+            'tgl_pengajuan' => 'required|date_format:Y-m-d',
+            'status' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -76,14 +75,16 @@ class CustomerController extends Controller
         }
 
         $request = [
-            "name" => $request->name,
-            "email" => $request->email,
-            "alamat" => $request->alamat,
-            "no_tlp" => $request->no_tlp,
-            "nik" => $request->nik
+            "id_nasabah" => $request->id_nasabah,
+            "jumlah_pinjaman" => $request->jumlah_pinjaman,
+            "tgl_pengajuan" => $request->tgl_pengajuan,
+            "status" => $request->status,
         ];
 
-        $result= $this->customerRepository->createCustomer($request);
+        $result= $this->pinjamanRepository->createPinjaman($request);
+        if($result == 0){
+            throw new DataNotFoundException('Data Customer Not Found');
+        }
         if($result == false){
             throw new FailedDataException('Failed to insert data');
         }
@@ -95,7 +96,7 @@ class CustomerController extends Controller
 
     }
 
-    public function updatecustomer(Request $request){
+    public function updatepinjaman(Request $request){
 
         if (empty($request->all())) {
             throw new ParameterException('Parameter tidak boleh kosong');
@@ -103,11 +104,9 @@ class CustomerController extends Controller
 
         $validator = Validator::make($request->all(), [
             'id' => 'required|numeric',
-            'name' => 'required|string',
-            'alamat' => 'required|string',
-            'email' => 'required|string',
-            'no_tlp' => 'required|string',
-            'nik' => 'required|digits:16|string'
+            'jumlah_pinjaman' => 'required|numeric',
+            'tgl_pengajuan' => 'required|date_format:Y-m-d',
+            'status' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -117,14 +116,12 @@ class CustomerController extends Controller
 
         $request = [
             "id" => $request->id,
-            "name" => $request->name,
-            "email" => $request->email,
-            "alamat" => $request->alamat,
-            "no_tlp" => $request->no_tlp,
-            "nik" => $request->nik
+            "jumlah_pinjaman" => $request->jumlah_pinjaman,
+            "tgl_pengajuan" => $request->tgl_pengajuan,
+            "status" => $request->status,
         ];
 
-        $result= $this->customerRepository->updateCustomer($request);
+        $result= $this->pinjamanRepository->updatePinjaman($request);
         if($result != 1){
             throw new FailedDataException('Failed to update data');
         }
@@ -132,34 +129,6 @@ class CustomerController extends Controller
         $this->output->responseCode = '00';
         $this->output->responseMessage = 'Success';
         $this->output->responseDesc = 'Success Update Data';
-        return response()->json($this->output);
-
-    }
-
-
-    public function deletecustomer(Request $request){
-
-        if (empty($request->all())) {
-            throw new ParameterException('Parameter tidak boleh kosong');
-        }
-
-        $validator = Validator::make($request->all(), [
-            'id' => 'required|numeric',
-        ]);
-
-        if ($validator->fails()) {
-            $error_massage = $validator->errors()->first();
-            throw new ParameterException($error_massage);
-        }
-
-        $result= $this->customerRepository->deleteCustomer($request->id);
-        if($result != 1){
-            throw new FailedDataException('Failed to delete data');
-        }
-
-        $this->output->responseCode = '00';
-        $this->output->responseMessage = 'Success';
-        $this->output->responseDesc = 'Success Delete Data';
         return response()->json($this->output);
 
     }
